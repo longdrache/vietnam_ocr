@@ -1,14 +1,49 @@
 import os
 
 import tensorflow as tf
-
-from crnn import get_model
-from loader import SIZE, MAX_LEN, TextImageGenerator, decode_batch
+from keras import applications
+from keras.layers import Input, Dense, Activation, Bidirectional, Dropout
+from keras.layers import Reshape, Lambda, BatchNormalization,LSTM                                                    
+import argparse
 from keras import backend as K
-import glob                                                                 
+from loader import TextImageGenerator, MAX_LEN, CHAR_DICT, SIZE, VizCallback, ctc_lambda_func,decode_batch
+import glob        
+from keras.models import Model                                                      
 import argparse
 from PIL import Image
 
+def get_model(input_shape, training, finetune):
+    inputs = Input(name='the_inputs', shape=input_shape, dtype='float32')
+    base_model = applications.VGG16(weights='imagenet', include_top=False)
+    inner = base_model(inputs)
+    inner = Reshape(target_shape=(int(inner.shape[1]), -1), name='reshape')(inner)
+    inner = Dense(256, kernel_initializer='lecun_normal', name='dense1',use_bias=False)(inner) 
+    inner = BatchNormalization()(inner)
+    inner =  Activation("relu")(inner)
+    inner = Dense(256, kernel_initializer='lecun_normal', name='dense2',use_bias=False)(inner) 
+    inner = BatchNormalization()(inner)
+    inner =  Activation("relu")(inner)
+    inner = Dropout(0.6)(inner)  
+    lstm = Bidirectional(LSTM(512, return_sequences=True, kernel_initializer='he_normal', name='lstm1', dropout=0.25, recurrent_dropout=0.25))(inner) 
+
+    y_pred = Dense(CHAR_DICT, activation='softmax', kernel_initializer='he_normal',name='dense3')(lstm)
+    
+    labels = Input(name='the_labels', shape=[MAX_LEN], dtype='float32')
+    input_length = Input(name='input_length', shape=[1], dtype='int64')
+    label_length = Input(name='label_length', shape=[1], dtype='int64')
+
+    loss_out = Lambda(ctc_lambda_func, output_shape=(1,), name='ctc')([y_pred, labels, input_length, label_length])
+
+    for layer in base_model.layers:
+        layer.trainable = finetune
+    
+    y_func = K.function([inputs], [y_pred])
+    
+    if training:
+        Model(inputs=[inputs, labels, input_length, label_length], outputs=loss_out).summary()
+        return Model(inputs=[inputs, labels, input_length, label_length], outputs=loss_out), y_func
+    else:
+        return Model(inputs=[inputs], outputs=y_pred)
 def loadmodel(weight_path):
     model = get_model((*SIZE, 3), training=False, finetune=0)
     model.load_weights(weight_path)
