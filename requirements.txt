@@ -4,4 +4,3 @@ editdistance
 opencv-python
 requests
 tensorflow 
-
