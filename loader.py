@@ -1,3 +1,4 @@
+from distutils.log import debug
 import json
 import cv2
 import numpy as np
@@ -13,6 +14,7 @@ import itertools
 import editdistance
 import json
 from io import BytesIO
+import cv2
 from PIL import Image
 import requests
 letters = " #'()+,-./:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYabcdeghiklmnopqrstuvxyzÂÊÔàáâãèéêìíòóôõùúýăĐđĩũƠơưạảấầẩậắằẵặẻẽếềểễệỉịọỏốồổỗộớờởỡợụủỨứừửữựỳỵỷỹ"
@@ -20,6 +22,63 @@ MAX_LEN = 70
 SIZE = 2560, 160
 CHAR_DICT = len(letters) + 1
 
+
+def removeBG(img):
+# load image
+# convert to graky
+
+    img[img >=10]=255
+    # threshold input image as mask
+    mask = cv2.threshold(img, 210, 230, cv2.THRESH_BINARY)[1]
+
+    # negate mask
+    mask = 255 - mask
+
+    # apply morphology to remove isolated extraneous noise
+    # use borderconstant of black since foreground touches the edges
+    kernel = np.ones((3,3), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    # anti-alias the mask -- blur then stretch
+    # blur alpha channel
+    mask = cv2.GaussianBlur(mask, (0,0), sigmaX=2, sigmaY=2, borderType = cv2.BORDER_DEFAULT)
+
+    # linear stretch so that 127.5 goes to 0, but 255 stays 255
+    mask = (2*(mask.astype(np.float32))-255.0).clip(0,255).astype(np.uint8)
+
+    # put mask into alpha channel
+    result = img.copy()
+    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)
+    result[:, :, 3] = mask
+    return result
+def thick_font(image):
+    import numpy as np
+    image = cv2.bitwise_not(image)
+    kernel = np.ones((2,2),np.uint8)
+    image = cv2.dilate(image, kernel, iterations=1)
+    image = cv2.bitwise_not(image)
+    return (image)
+def noise_removal(image):
+    import numpy as np
+    kernel = np.ones((1, 1), np.uint8)
+    image = cv2.dilate(image, kernel, iterations=1)
+    kernel = np.ones((1, 1), np.uint8)
+    image = cv2.erode(image, kernel, iterations=1)
+    image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+    image = cv2.medianBlur(image, 3)
+    return (image)
+def grayscale(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def noise_removal(image):
+    import numpy as np
+    kernel = np.ones((1, 1), np.uint8)
+    image = cv2.dilate(image, kernel, iterations=1)
+    kernel = np.ones((1, 1), np.uint8)
+    image = cv2.erode(image, kernel, iterations=1)
+    image = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+    image = cv2.medianBlur(image, 3)
+    return (image)
 def text_to_labels(text):
     return list(map(lambda x: letters.index(x), text))
 
@@ -108,11 +167,27 @@ class TextImageGenerator:
    
     def build_data(self):
         opencvImage = cv2.cvtColor(np.array(self.data), cv2.COLOR_RGB2BGR)
-        cv2.imwrite("predict.png",opencvImage)
+        
+        gray_image = grayscale(opencvImage )
+
+        thresh, im_bw = cv2.threshold(gray_image, 210, 255, cv2.THRESH_BINARY)
+
+        no_noise = noise_removal(im_bw)
+
+        dilated= thick_font(no_noise)
+
+        new = removeBG(dilated)
+        cv2.imwrite("predict.png",new)
         
         img = load_img("predict.png", target_size=SIZE[::-1])
         
         img = img_to_array(img)
+        
+
+            
+
+    
+
 
         img = preprocess_input(img).astype(np.float16)
         

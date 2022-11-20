@@ -1,7 +1,7 @@
 numpy 
 keras
 editdistance
-opencv-python
+opencv-python-headless
 requests
 tensorflow 
 streamlit

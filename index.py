@@ -12,6 +12,7 @@ if uploaded_file is not None:
     # To read file as bytes:
     bytes_data = uploaded_file.getvalue()
     image_pred = Image.open(io.BytesIO(bytes_data))
+    #%%
     st.image(image_pred)
    
     with st.spinner('Wait for it...'):
