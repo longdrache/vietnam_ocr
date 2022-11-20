@@ -1,0 +1,48 @@
+Nhận dạng chữ viết tay Tiếng VIệt 
+
+Tiền xử lý: Gỡ nhiễu và chuyển sang ảnh trắng đen
+Phải chuyển sang tensorflow 2.x dùng keras 
+
+Tài liệu tham khảo tesorflow 2.x 
+Khi chạy thử thì chạy trên bộ dữ liệu 15 ảnh
+
+
+
+
+nếu mà tốt thì chạy trên colab, các bạn phải chạy trên colab để có kinh nghiệm sau này 
+
+
+Thấy dễ là do người ta cho 
+chưa ra deep learning thì việc huấn luyện rất khó khăn tệ 
+
+
+
+Nhận dạng chữ viết/tiếng nói là nhận dạng chuỗi (sequence) nên ta dùng một phương pháp
+Gồm 3 khối: CNN ->RNN->CTC 
+
+
+Mạng noron chập 
+Convolulational neural network CNN
+
+Mạng nơron hồi quy 
+Recurrent neural network RNN
+Nhận dạng từ nối 
+Connectionest temporal classfication CTC
+
+
+Nhan dang chu viet tay tieng anh big dataset  người ta đã dung ténorflow 2.o không dùng keras 
+
+
+Ta phải dùng một chương trình python để ghi âmm tiếng nói của mình và format đúng số liệu của iteeng anh
+
+
+batch-size nghĩa là mỗi lần lấy bao nhoeeu cập nhật trọng số của deep neuralnetwork
+Nếu không dùng gpu thì không cần pahir sửa batch_size, nếu dùng gpu phải đủ lớn 
+Geforce RTX 2080 Ti
+của thầy 2070 
+
+
+
+one channel sample 16 bit
+stero chanel trai phai
+rate-sample 22.050HZ
