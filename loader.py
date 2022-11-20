@@ -1,4 +1,3 @@
-from distutils.log import debug
 import json
 import cv2
 import numpy as np
