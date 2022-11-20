@@ -1,20 +1,7 @@
-
 numpy 
-
 keras
-itertools
 editdistance
-json
-
 opencv-python
-
 requests
-
-
 tensorflow 
 
-
-keras 
-glob                                                                 
-argparse
-Pillow 
