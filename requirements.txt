@@ -4,3 +4,4 @@ editdistance
 opencv-python
 requests
 tensorflow 
+streamlit
