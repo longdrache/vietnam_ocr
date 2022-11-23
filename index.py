@@ -4,6 +4,8 @@ from PIL import Image
 from predict import  predict
 import io
 
+import os
+
 st.markdown('<h1 style="text-align:center;padding:20px;">Nhận dạng chữ cái Tiếng Việt</h1>',unsafe_allow_html=True)
 image = Image.open('header.png')
 st.image(image)
@@ -17,6 +19,7 @@ if uploaded_file is not None:
    
     with st.spinner('Wait for it...'):
         st.markdown('<p style="text-align:center;padding:30px;font-size:30px">{}</p>'.format(predict(image_pred)), unsafe_allow_html=True)
+    os.remove('predict.png')
 
     
 
